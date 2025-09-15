@@ -28,27 +28,32 @@ st.subheader("🔍 Autocomplete")
 q = st.text_input("Search for a condition (in NAMASTE or ICD-11)")
 
 if st.button("Search"):
-    # 1) Fetch autocomplete results
     resp = requests.get(f"{API_BASE}/autocomplete", params={"q": q})
     if not resp.ok:
         st.error(f"Error {resp.status_code}: {resp.text}")
     else:
         suggestions = resp.json()
 
-        if not suggestions:
+        # 1) Ensure it’s a list
+        if not isinstance(suggestions, list):
+            st.error("Unexpected response format")
+        elif not suggestions:
             st.info("No matches found.")
         else:
-            # 2) Convert to DataFrame
-            df = pd.DataFrame(suggestions)
+            # 2) Normalize into uniform rows
+            rows = []
+            for item in suggestions:
+                # pull out the fields you care about,
+                # defaulting to empty string if missing
+                rows.append({
+                    "Code": item.get("code", ""),
+                    "Term": item.get("term", "")
+                })
 
-            # 3) Optionally rename columns for clarity
-            df = df.rename(columns={
-                "code": "Code",
-                "term": "Term",
-                # add other fields here if present
-            })
+            # 3) Build DataFrame from the uniform rows
+            df = pd.DataFrame(rows)
 
-            # 4) Render as a table
+            # 4) Display as a table
             st.table(df)
 
 # ---- Mapping ----
