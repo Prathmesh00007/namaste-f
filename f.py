@@ -26,9 +26,30 @@ if st.button("Sync ICD-11 from WHO API"):
 # ---- Autocomplete ----
 st.subheader("🔍 Autocomplete")
 q = st.text_input("Search for a condition (in NAMASTE or ICD-11)")
+
 if st.button("Search"):
-    r = requests.get(f"{API_BASE}/autocomplete", params={"q": q})
-    st.json(r.json())
+    # 1) Fetch autocomplete results
+    resp = requests.get(f"{API_BASE}/autocomplete", params={"q": q})
+    if not resp.ok:
+        st.error(f"Error {resp.status_code}: {resp.text}")
+    else:
+        suggestions = resp.json()
+
+        if not suggestions:
+            st.info("No matches found.")
+        else:
+            # 2) Convert to DataFrame
+            df = pd.DataFrame(suggestions)
+
+            # 3) Optionally rename columns for clarity
+            df = df.rename(columns={
+                "code": "Code",
+                "term": "Term",
+                # add other fields here if present
+            })
+
+            # 4) Render as a table
+            st.table(df)
 
 # ---- Mapping ----
 
