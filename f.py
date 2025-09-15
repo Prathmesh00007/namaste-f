@@ -32,32 +32,31 @@ if st.button("Search"):
     if not resp.ok:
         st.error(f"Error {resp.status_code}: {resp.text}")
     else:
-        suggestions = resp.json()
+        data = resp.json()
         
-        st.write("🔍 Raw autocomplete response:", suggestions)
+        with st.expander("📋 Autocomplete Results", expanded=True):
+            namaste_list = data.get("namaste", [])
+            icd_list     = data.get("icd11", [])
 
+            # NAMASTE suggestions
+            if namaste_list:
+                df_namaste = pd.DataFrame(namaste_list).rename(
+                    columns={"code": "Code", "term": "Term"}
+                )
+                st.markdown("**NAMASTE Suggestions**")
+                st.table(df_namaste)
 
-        # 1) Ensure it’s a list
-        if not isinstance(suggestions, list):
-            st.error("Unexpected response format")
-        elif not suggestions:
-            st.info("No matches found.")
-        else:
-            # 2) Normalize into uniform rows
-            rows = []
-            for item in suggestions:
-                # pull out the fields you care about,
-                # defaulting to empty string if missing
-                rows.append({
-                    "Code": item.get("code", ""),
-                    "Term": item.get("term", "")
-                })
+            # ICD-11 suggestions
+            if icd_list:
+                df_icd = pd.DataFrame(icd_list).rename(
+                    columns={"code": "ICD-11 Code", "title": "Title"}
+                )
+                st.markdown("**ICD-11 Suggestions**")
+                st.table(df_icd)
 
-            # 3) Build DataFrame from the uniform rows
-            df = pd.DataFrame(rows)
-
-            # 4) Display as a table
-            st.table(df)
+            # No results case
+            if not namaste_list and not icd_list:
+                st.info("No suggestions found.")
 
 # ---- Mapping ----
 
