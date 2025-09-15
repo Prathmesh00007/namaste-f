@@ -33,6 +33,9 @@ if st.button("Search"):
         st.error(f"Error {resp.status_code}: {resp.text}")
     else:
         suggestions = resp.json()
+        
+        st.write("🔍 Raw autocomplete response:", suggestions)
+
 
         # 1) Ensure it’s a list
         if not isinstance(suggestions, list):
