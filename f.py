@@ -26,9 +26,21 @@ if st.button("Sync ICD-11 from WHO API"):
 # ---- Autocomplete ----
 st.subheader("🔍 Autocomplete")
 q = st.text_input("Search for a condition (in NAMASTE or ICD-11)")
+
 if st.button("Search"):
     r = requests.get(f"{API_BASE}/autocomplete", params={"q": q})
-    st.json(r.json())
+    if r.ok:
+        results = r.json()
+
+        with st.expander("📋 Autocomplete Results", expanded=True):
+            if not results:
+                st.warning("No matches found.")
+            else:
+                for item in results:
+                    st.markdown(f"- **{item['code']}**: {item['term']}")
+    else:
+        st.error(f"Error {r.status_code}: {r.text}")
+
 
 # ---- Mapping ----
 
